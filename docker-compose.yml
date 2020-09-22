@@ -1,0 +1,58 @@
+version: '3.5'
+services:
+  cacti:
+    image: "smcline06/cacti"
+    restart: always
+    container_name: cacti
+    domainname: changeme.org
+    hostname: cacti
+    ports:
+      - "8081:80"
+      - "443:443"
+    env_file:
+      - .cacti.env
+    volumes:
+      - cacti-data:/cacti
+      - cacti-spine:/spine
+      - cacti-backups:/backups
+      - ./resource:/cacti/resource
+    links:
+      - db
+
+  db:
+    image: "mariadb:10.3"
+    restart: always
+    container_name: cacti_db
+    domainname: db.changeme.org
+    hostname: db
+    ports:
+      - "3306:3306"
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=200
+      - --max_heap_table_size=128M
+      - --max_allowed_packet=32M
+      - --tmp_table_size=128M
+      - --join_buffer_size=128M
+      - --innodb_buffer_pool_size=1G
+      - --innodb_doublewrite=ON
+      - --innodb_flush_log_at_timeout=3
+      - --innodb_read_io_threads=32
+      - --innodb_write_io_threads=16
+      - --innodb_buffer_pool_instances=9
+      - --innodb_file_format=Barracuda
+      - --innodb_large_prefix=1
+      - --innodb_io_capacity=5000
+      - --innodb_io_capacity_max=10000
+    env_file:
+      - .db.env
+    volumes:
+      - cacti-db:/var/lib/mysql
+
+volumes:
+  cacti-db:
+  cacti-data:
+  cacti-spine:
+  cacti-backups:
